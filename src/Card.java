@@ -24,6 +24,10 @@ public class Card {
         return pointValue;
     }
 
+    public String url() {
+        return "GameCards/" + rank() + suit() + ".GIF";
+    }
+
     public boolean matches(Card otherCard) {
         return otherCard.suit().equals(this.suit())
                 && otherCard.rank().equals(this.rank())
