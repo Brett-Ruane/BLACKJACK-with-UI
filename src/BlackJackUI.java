@@ -3,8 +3,6 @@ import javafx.scene.Scene;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.layout.HBox;
-import javafx.scene.Scene;
-import javafx.stage.Stage;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.layout.VBox;
@@ -21,6 +19,7 @@ import javafx.beans.binding.Bindings;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.ArrayList;
+import javafx.scene.text.*;
 
 public class BlackJackUI extends Application {
 
@@ -49,6 +48,12 @@ public class BlackJackUI extends Application {
     private Button stand;
     private Button hit;
 
+    private Deck deck = new Deck(RANKS, SUITS, POINT_VALUES);
+    private Player one = new Player("Brett", 1);
+    private Player dealer = new Player("", 0);
+    private List<Card> oneCards = new ArrayList<Card>();
+    private List<Card> dealerCards = new ArrayList<Card>();
+
     public BlackJackUI() {
         this.stage = null;
         this.scene = null;
@@ -58,14 +63,8 @@ public class BlackJackUI extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         BlackJackUI app = new BlackJackUI();
-        Deck deck = new Deck(RANKS, SUITS, POINT_VALUES);
+        System.out.println(deck);
         this.stage = stage;
-
-        String name = "Brett";
-        Player one = new Player(name, 1);
-        Player dealer = new Player("", 0);
-        List<Card> oneCards = new ArrayList<Card>();
-        List<Card> dealerCards = new ArrayList<Card>();
 
         Card dealt = deck.deal();
         oneCards.add(dealt);
@@ -107,13 +106,21 @@ public class BlackJackUI extends Application {
         // bottomRow
         bottomRow = new HBox(4);
         total = new Label("Total = " + one.total());
+        total.setFont(Font.font("Verdana", FontWeight.BOLD, 30));
         stand = new Button("Stand");
+        stand.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
+        stand.setPadding(new Insets(5, 5, 5, 5));
         hit = new Button("Hit");
+        hit.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
+        hit.setPadding(new Insets(5, 5, 5, 5));
         bottomRow.getChildren().addAll(total, stand, hit);
 
         // adding all to root
         root.getChildren().addAll(cardRow, bottomRow);
         root.setSpacing(0);
+        // buttons
+        stand.setOnAction(this::stand);
+        hit.setOnAction(this::hit);
         // setting scene
         this.scene = new Scene(this.root);
         this.stage.setOnCloseRequest(event -> Platform.exit());
@@ -132,5 +139,45 @@ public class BlackJackUI extends Application {
     @Override
     public void init() throws Exception {
         super.init();
+    }
+
+    private void stand(ActionEvent a) {
+        System.out.println(deck);
+        hit.setDisable(true);
+        stand.setDisable(true);
+        while ((dealer.total() < 17) || (dealer.total() > 17 && dealer.getAce() != 0)) {
+            if (dealer.total() > 17 && dealer.getAce() > 0) {
+                dealer.subTotal(10);
+                dealer.subAce();
+            }
+            Card dealt = deck.deal();
+            dealerCards.add(dealt);
+            if (dealt.pointValue() == 11)
+                dealer.addAce();
+        }
+        if (one.total() > dealer.total()) {
+            System.out.println("YOU WIN");
+        } else if (one.total() == dealer.total()) {
+            System.out.println("TIE, Take Back Chips");
+        } else {
+            System.out.println("YOU LOOSE");
+        }
+    }
+
+    private void hit(ActionEvent a) {
+        System.out.println(deck);
+        Card dealt = deck.deal();
+        oneCards.add(dealt);
+        if (dealt.pointValue() == 11)
+            one.addAce();
+        one.add(dealt.pointValue());
+        if (one.total() > 21 && one.getAce() > 0) {
+            one.subTotal(10);
+            one.subAce();
+        } else if (one.total() > 21) {
+            System.out.println("BUST");
+            System.out.println("YOU LOOSE");
+            // System.exit(1);
+        }
     }
 }
