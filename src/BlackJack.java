@@ -79,6 +79,7 @@ public class BlackJack {
             }
             dealt = deck.deal();
             dealerCards.add(dealt);
+            dealer.add(dealt.pointValue());
             if (dealt.pointValue() == 11)
                 dealer.addAce();
             dealer.add(dealt.pointValue());

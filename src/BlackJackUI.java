@@ -20,6 +20,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.ArrayList;
 import javafx.scene.text.*;
+import javafx.scene.paint.Color;
 
 public class BlackJackUI extends Application {
 
@@ -30,20 +31,33 @@ public class BlackJackUI extends Application {
 
     private static final int[] POINT_VALUES = { 11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10 };
 
+    private int count = 2;
+    private int count2 = 2;
+
     private Stage stage;
     private Scene scene;
     private VBox root;
 
-    // name stuff
-    // private HBox topRow;
-    // private Label playerName;
+    // top
+    private HBox topRow;
+    private Label dealerTotal;
+
+    // dealer cards
+    private HBox dealerCardRow;
+    private ImageView dealerCardHolder[] = new ImageView[5];
+
+    // your cards
+    private HBox yourCardsRow;
+    private Label yourCards;
+    private Label winLoose;
 
     // where cards go
     private HBox cardRow;
-    private List<ImageView> cardHolder = new ArrayList<ImageView>();
+    private ImageView cardHolder[] = new ImageView[5];
 
     // total and buttons
     private HBox bottomRow;
+    private Label spacer;
     private Label total;
     private Button stand;
     private Button hit;
@@ -65,7 +79,6 @@ public class BlackJackUI extends Application {
         BlackJackUI app = new BlackJackUI();
         System.out.println(deck);
         this.stage = stage;
-
         Card dealt = deck.deal();
         oneCards.add(dealt);
         if (dealt.pointValue() == 11)
@@ -88,39 +101,68 @@ public class BlackJackUI extends Application {
         dealer.add(dealt.pointValue());
 
         // topRow
-        // topRow = new HBox(4);
-        // playerName = new Label(Player.getName());
-        // topRow.setPadding(new Insets(5, 2, 2, 5));
-        // topRow.getChildren().addAll(playerName);
+        topRow = new HBox(4);
+        dealerTotal = new Label("Dealers Cards");
+        dealerTotal.setFont(Font.font("Verdana", FontWeight.BOLD, 30));
+        topRow.getChildren().addAll(dealerTotal);
+
+        // dealer cards
+        dealerCardRow = new HBox(4);
+        for (int i = 0; i < dealerCardHolder.length; i++)
+            dealerCardHolder[i] = new ImageView("GameCards/white.GIF");
+        dealerCardRow.setPadding(new Insets(20));
+        dealerCardHolder[0] = new ImageView(dealerCards.get(0).url());
+        dealerCardHolder[1] = new ImageView("GameCards/back1.GIF");
+        for (int i = 0; i < dealerCardHolder.length; i++)
+            dealerCardRow.getChildren().add(dealerCardHolder[i]);
+
+        // your cards
+        yourCardsRow = new HBox(4);
+        yourCards = new Label("Your Cards");
+        yourCards.setFont(Font.font("Verdana", FontWeight.BOLD, 30));
+        winLoose = new Label("");
+        winLoose.setPadding(new Insets(0, 0, 0, 30));
+        winLoose.setFont(Font.font("Verdana", FontWeight.BOLD, 30));
+        yourCardsRow.getChildren().addAll(yourCards, winLoose);
 
         // test
-        for (int i = 0; i < 2; i++)
-            cardHolder.add(new ImageView(oneCards.get(i).url()));
+        for (int i = 0; i < cardHolder.length; i++)
+            cardHolder[i] = new ImageView("GameCards/white.GIF");
+        cardHolder[0] = new ImageView(oneCards.get(0).url());
+        cardHolder[1] = new ImageView(oneCards.get(1).url());
 
         // cardRow
         cardRow = new HBox(4);
-        cardRow.setPadding(new Insets(100));
-        for (int i = 0; i < cardHolder.size(); i++)
-            cardRow.getChildren().add(cardHolder.get(i));
+        cardRow.setPadding(new Insets(20));
+        for (int i = 0; i < cardHolder.length; i++)
+            cardRow.getChildren().add(cardHolder[i]);
 
         // bottomRow
         bottomRow = new HBox(4);
         total = new Label("Total = " + one.total());
         total.setFont(Font.font("Verdana", FontWeight.BOLD, 30));
+        Label spacer2 = new Label("");
+        spacer2.setPadding(new Insets(0, 30, 0, 15));
         stand = new Button("Stand");
+        stand.setOnAction(this::stand);
         stand.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
-        stand.setPadding(new Insets(5, 5, 5, 5));
+        stand.setPadding(new Insets(15));
+        spacer = new Label("");
+        spacer.setPadding(new Insets(0, 30, 0, 15));
         hit = new Button("Hit");
+        hit.setOnAction(this::hit);
         hit.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
-        hit.setPadding(new Insets(5, 5, 5, 5));
-        bottomRow.getChildren().addAll(total, stand, hit);
+        hit.setPadding(new Insets(15));
+        bottomRow.getChildren().addAll(total, spacer2, stand, spacer, hit);
+
+        if (one.total() == 21) {
+            ActionEvent a = new ActionEvent();
+            stand(a);
+        }
 
         // adding all to root
-        root.getChildren().addAll(cardRow, bottomRow);
+        root.getChildren().addAll(topRow, dealerCardRow, yourCardsRow, cardRow, bottomRow);
         root.setSpacing(0);
-        // buttons
-        stand.setOnAction(this::stand);
-        hit.setOnAction(this::hit);
         // setting scene
         this.scene = new Scene(this.root);
         this.stage.setOnCloseRequest(event -> Platform.exit());
@@ -142,6 +184,7 @@ public class BlackJackUI extends Application {
     }
 
     private void stand(ActionEvent a) {
+        dealerCardHolder[1].setImage(new Image(dealerCards.get(1).url()));
         System.out.println(deck);
         hit.setDisable(true);
         stand.setDisable(true);
@@ -151,32 +194,53 @@ public class BlackJackUI extends Application {
                 dealer.subAce();
             }
             Card dealt = deck.deal();
+            dealer.add(dealt.pointValue());
             dealerCards.add(dealt);
+            dealerCardHolder[count2].setImage(new Image(dealt.url()));
+            count2++;
             if (dealt.pointValue() == 11)
                 dealer.addAce();
         }
-        if (one.total() > dealer.total()) {
+        if ((one.total() > dealer.total()) || (dealer.total() > 21)) {
+            winLoose.setText("YOU WIN");
+            winLoose.setTextFill(Color.color(0, 1, 0));
             System.out.println("YOU WIN");
+            System.out.println("Dealer Total = " + dealer.total());
         } else if (one.total() == dealer.total()) {
+            winLoose.setText("TIE, Take Back Chips");
+            winLoose.setTextFill(Color.color(1, 1, 0));
             System.out.println("TIE, Take Back Chips");
+            System.out.println("Dealer Total = " + dealer.total());
         } else {
+            winLoose.setText("YOU LOOSE");
+            winLoose.setTextFill(Color.color(1, 0, 0));
             System.out.println("YOU LOOSE");
+            System.out.println("Dealer Total = " + dealer.total());
         }
     }
 
     private void hit(ActionEvent a) {
         System.out.println(deck);
         Card dealt = deck.deal();
+        one.add(dealt.pointValue());
+        total.setText("Total = " + one.total());
         oneCards.add(dealt);
+        cardHolder[count].setImage(new Image(dealt.url()));
+        count++;
         if (dealt.pointValue() == 11)
             one.addAce();
-        one.add(dealt.pointValue());
         if (one.total() > 21 && one.getAce() > 0) {
             one.subTotal(10);
             one.subAce();
+            total.setText("Total = " + one.total());
         } else if (one.total() > 21) {
+            winLoose.setText("YOU LOOSE");
+            winLoose.setTextFill(Color.color(1, 0, 0));
+            System.out.println("Total = " + one.total());
             System.out.println("BUST");
             System.out.println("YOU LOOSE");
+            hit.setDisable(true);
+            stand.setDisable(true);
             // System.exit(1);
         }
     }
