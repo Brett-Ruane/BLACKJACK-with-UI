@@ -168,6 +168,7 @@ public class BlackJackUI extends Application {
         this.stage.setOnCloseRequest(event -> Platform.exit());
         this.stage.setTitle("Casino");
         this.stage.setScene(this.scene);
+        this.stage.setMinWidth(500);
         this.stage.sizeToScene();
         this.stage.show();
         Platform.runLater(() -> this.stage.setResizable(false));
@@ -207,9 +208,9 @@ public class BlackJackUI extends Application {
             System.out.println("YOU WIN");
             System.out.println("Dealer Total = " + dealer.total());
         } else if (one.total() == dealer.total()) {
-            winLoose.setText("TIE, Take Back Chips");
-            winLoose.setTextFill(Color.color(1, 1, 0));
-            System.out.println("TIE, Take Back Chips");
+            winLoose.setText("TIE");
+            winLoose.setTextFill(Color.color(1, .5, 0));
+            System.out.println("TIE");
             System.out.println("Dealer Total = " + dealer.total());
         } else {
             winLoose.setText("YOU LOOSE");
