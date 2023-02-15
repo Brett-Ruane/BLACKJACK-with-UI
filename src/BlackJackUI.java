@@ -1,22 +1,16 @@
 import javafx.stage.Stage;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.application.Application;
 import javafx.application.Platform;
 import javafx.scene.layout.HBox;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.scene.layout.VBox;
 import javafx.scene.control.Button;
-import javafx.scene.control.TextField;
-import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.Image;
-import javafx.scene.layout.Priority;
 import javafx.geometry.Insets;
-import javafx.scene.control.ProgressBar;
-import javafx.beans.binding.Bindings;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.ArrayList;
 import javafx.scene.text.*;
@@ -57,10 +51,10 @@ public class BlackJackUI extends Application {
 
     // total and buttons
     private HBox bottomRow;
-    private Label spacer;
     private Label total;
     private Button stand;
     private Button hit;
+    private Button playAgain;
 
     private Deck deck = new Deck(RANKS, SUITS, POINT_VALUES);
     private Player one = new Player("Brett", 1);
@@ -75,7 +69,7 @@ public class BlackJackUI extends Application {
     }
 
     @Override
-    public void start(Stage stage) throws Exception {
+    public void start(Stage stage) {
         BlackJackUI app = new BlackJackUI();
         System.out.println(deck);
         this.stage = stage;
@@ -142,18 +136,28 @@ public class BlackJackUI extends Application {
         total = new Label("Total = " + one.total());
         total.setFont(Font.font("Verdana", FontWeight.BOLD, 30));
         Label spacer2 = new Label("");
-        spacer2.setPadding(new Insets(0, 30, 0, 15));
+        spacer2.setPadding(new Insets(0, 0, 0, 5));
         stand = new Button("Stand");
         stand.setOnAction(this::stand);
         stand.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
-        stand.setPadding(new Insets(15));
-        spacer = new Label("");
-        spacer.setPadding(new Insets(0, 30, 0, 15));
+        Label spacer = new Label("");
+        spacer.setPadding(new Insets(0, 15, 0, 15));
         hit = new Button("Hit");
         hit.setOnAction(this::hit);
         hit.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
-        hit.setPadding(new Insets(15));
-        bottomRow.getChildren().addAll(total, spacer2, stand, spacer, hit);
+        Label spacer3 = new Label("");
+        spacer.setPadding(new Insets(0, 15, 0, 15));
+        playAgain = new Button("Play Again?");
+        playAgain.setOnAction(e -> {
+            try {
+                playAgain(e);
+            } catch (Exception s) {
+                // s.printStackTrace();
+            }
+        });
+        playAgain.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
+        playAgain.setDisable(true);
+        bottomRow.getChildren().addAll(total, spacer2, stand, hit, spacer3, playAgain);
 
         if (one.total() == 21) {
             ActionEvent a = new ActionEvent();
@@ -172,6 +176,7 @@ public class BlackJackUI extends Application {
         this.stage.sizeToScene();
         this.stage.show();
         Platform.runLater(() -> this.stage.setResizable(false));
+        Platform.setImplicitExit(false);
     }
 
     @Override
@@ -184,13 +189,37 @@ public class BlackJackUI extends Application {
         super.init();
     }
 
+    private void playAgain(ActionEvent a) throws Exception {
+        deck = new Deck(RANKS, SUITS, POINT_VALUES);
+        one = new Player("Brett", 1);
+        dealer = new Player("", 0);
+        oneCards = new ArrayList<Card>();
+        dealerCards = new ArrayList<Card>();
+        dealerCardHolder = new ImageView[5];
+        cardHolder = new ImageView[5];
+        count = 2;
+        count2 = 2;
+        Button button = (Button) a.getSource();
+        Scene scene = button.getScene();
+        root = new VBox(3);
+        scene.setRoot(root);
+        start(stage);
+    }
+
     private void stand(ActionEvent a) {
         dealerCardHolder[1].setImage(new Image(dealerCards.get(1).url()));
         System.out.println(deck);
         hit.setDisable(true);
         stand.setDisable(true);
+        playAgain.setDisable(false);
         while ((dealer.total() < 17) || (dealer.total() > 17 && dealer.getAce() != 0)) {
-            if (dealer.total() > 17 && dealer.getAce() > 0) {
+            if (dealer.total() == 21) {
+                break;
+            }
+            if (dealer.total() <= 21 && dealer.total() >= 17 && dealer.getAce() == 1) {
+                break;
+            }
+            if (dealer.total() > 17 && dealer.getAce() != 0) {
                 dealer.subTotal(10);
                 dealer.subAce();
             }
@@ -242,7 +271,7 @@ public class BlackJackUI extends Application {
             System.out.println("YOU LOOSE");
             hit.setDisable(true);
             stand.setDisable(true);
-            // System.exit(1);
+            playAgain.setDisable(false);
         }
     }
 }
